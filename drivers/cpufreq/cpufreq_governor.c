@@ -156,12 +156,32 @@ unsigned int dbs_update(struct cpufreq_policy *policy)
 			j_cdbs->prev_cpu_nice = cur_nice;
 		}
 
-		if (unlikely(!time_elapsed)) {
-			/*
-			 * That can only happen when this function is called
-			 * twice in a row with a very short interval between the
-			 * calls, so the previous load value can be used then.
-			 */
+		if (unlikely(!wall_time || wall_time < idle_time))
+			continue;
+
+		/*
+		 * If the CPU had gone completely idle, and a task just woke up
+		 * on this CPU now, it would be unfair to calculate 'load' the
+		 * usual way for this elapsed time-window, because it will show
+		 * near-zero load, irrespective of how CPU intensive that task
+		 * actually is. This is undesirable for latency-sensitive bursty
+		 * workloads.
+		 *
+		 * To avoid this, we reuse the 'load' from the previous
+		 * time-window and give this task a chance to start with a
+		 * reasonably high CPU frequency. (However, we shouldn't over-do
+		 * this copy, lest we get stuck at a high load (high frequency)
+		 * for too long, even when the current system load has actually
+		 * dropped down. So we perform the copy only once, upon the
+		 * first wake-up from idle.)
+		 *
+		 * Detecting this situation is easy: the governor's deferrable
+		 * timer would not have fired during CPU-idle periods. Hence
+		 * an unusually large 'wall_time' (as compared to the sampling
+		 * rate) indicates this scenario.
+		 */
+		if (unlikely(wall_time > (2 * sampling_rate) &&
+			     j_cdbs->prev_load)) {
 			load = j_cdbs->prev_load;
 		} else if (unlikely(time_elapsed > 2 * sampling_rate &&
 				    j_cdbs->prev_load)) {
@@ -213,6 +233,7 @@ unsigned int dbs_update(struct cpufreq_policy *policy)
 				load = (int)idle_time < 0 ? 100 : 0;
 			}
 			j_cdbs->prev_load = load;
+			j_cdbs->copy_prev_load = true;
 		}
 
 		if (load > max_load)
@@ -484,6 +505,7 @@ void cpufreq_dbs_governor_exit(struct cpufreq_policy *policy)
 	if (!count) {
 		if (!have_governor_per_policy())
 			gov->gdbs_data = NULL;
+			j_cdbs->copy_prev_load = true;
 
 		gov->exit(dbs_data);
 		kfree(dbs_data);
