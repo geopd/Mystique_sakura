@@ -506,6 +506,8 @@ static int skcipher_walk_aead_common(struct skcipher_walk *walk,
 	struct crypto_aead *tfm = crypto_aead_reqtfm(req);
 	int err;
 
+	walk->flags &= ~SKCIPHER_WALK_PHYS;
+
 	scatterwalk_start(&walk->in, req->src);
 	scatterwalk_start(&walk->out, req->dst);
 
