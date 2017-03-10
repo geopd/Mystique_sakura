@@ -123,7 +123,6 @@ static DEFINE_IDA(cpufreq_ida);
 static LIST_HEAD(cpufreq_cdev_list);
 
 static atomic_t in_suspend;
-static unsigned int cpufreq_dev_count;
 static int8_t cpuhp_registered;
 static struct work_struct cpuhp_register_work;
 static struct cpumask cpus_pending_online;
@@ -1058,6 +1057,7 @@ __cpufreq_cooling_register(struct device_node *np,
 	unsigned int freq, i, num_cpus;
 	int ret;
 	struct thermal_cooling_device_ops *cooling_ops;
+	bool first;
 
 	policy = cpufreq_cpu_get(cpumask_first(clip_cpus));
 	if (!policy) {
@@ -1164,10 +1164,12 @@ __cpufreq_cooling_register(struct device_node *np,
 	cpufreq_dev->cool_dev = cool_dev;
 
 	mutex_lock(&cooling_list_lock);
-	list_add(&cpufreq_dev->node, &cpufreq_dev_list);
-
 	/* Register the notifier for first cpufreq cooling device */
-	if (!cpufreq_dev_count++)
+	first = list_empty(&cpufreq_dev_list);
+	list_add(&cpufreq_dev->node, &cpufreq_dev_list);
+	mutex_unlock(&cooling_list_lock);
+
+	if (first)
 		cpufreq_register_notifier(&thermal_cpufreq_notifier_block,
 					  CPUFREQ_POLICY_NOTIFIER);
 	if (!cpuhp_registered) {
@@ -1178,7 +1180,6 @@ __cpufreq_cooling_register(struct device_node *np,
 		INIT_WORK(&cpuhp_register_work, register_cdev);
 		queue_work(system_wq, &cpuhp_register_work);
 	}
-	mutex_unlock(&cooling_list_lock);
 
 	goto put_policy;
 
@@ -1341,6 +1342,7 @@ EXPORT_SYMBOL(of_cpufreq_power_cooling_register);
 void cpufreq_cooling_unregister(struct thermal_cooling_device *cdev)
 {
 	struct cpufreq_cooling_device *cpufreq_dev;
+	bool last;
 
 	if (!cdev)
 		return;
@@ -1348,16 +1350,14 @@ void cpufreq_cooling_unregister(struct thermal_cooling_device *cdev)
 	cpufreq_dev = cdev->devdata;
 
 	mutex_lock(&cooling_list_lock);
-	/* Unregister the notifier for the last cpufreq cooling device */
-	if (!--cpufreq_dev_count) {
-		unregister_pm_notifier(&cpufreq_cooling_pm_nb);
-		cpufreq_unregister_notifier(
-				&thermal_cpufreq_notifier_block,
-				CPUFREQ_POLICY_NOTIFIER);
-	}
-
 	list_del(&cpufreq_dev->node);
+	/* Unregister the notifier for the last cpufreq cooling device */
+	last = list_empty(&cpufreq_dev_list);
 	mutex_unlock(&cooling_list_lock);
+
+	if (last)
+		cpufreq_unregister_notifier(&thermal_cpufreq_notifier_block,
+					    CPUFREQ_POLICY_NOTIFIER);
 
 	thermal_cooling_device_unregister(cpufreq_dev->cool_dev);
 	ida_simple_remove(&cpufreq_ida, cpufreq_dev->id);
