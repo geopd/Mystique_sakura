@@ -2941,13 +2941,6 @@ static void tcp_update_rtt_min(struct sock *sk, u32 rtt_us, const int flag)
 	struct tcp_sock *tp = tcp_sk(sk);
 	u32 wlen = sysctl_tcp_min_rtt_wlen * HZ;
 
-	if ((flag & FLAG_ACK_MAYBE_DELAYED) && rtt_us > tcp_min_rtt(tp)) {
-		/* If the remote keeps returning delayed ACKs, eventually
-		 * the min filter would pick it up and overestimate the
-		 * prop. delay when it expires. Skip suspected delayed ACKs.
-		 */
-		return;
-	}
 	minmax_running_min(&tp->rtt_min, wlen, tcp_jiffies32,
 			   rtt_us ? : jiffies_to_usecs(1));
 }
