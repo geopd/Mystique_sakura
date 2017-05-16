@@ -796,8 +796,12 @@ static void bbr_update_min_rtt(struct sock *sk, const struct rate_sample *rs)
 		} else if (bbr->probe_rtt_done_stamp) {
 			if (bbr->round_start)
 				bbr->probe_rtt_round_done = 1;
-			if (bbr->probe_rtt_round_done)
-				bbr_check_probe_rtt_done(sk);
+			if (bbr->probe_rtt_round_done &&
+			    after(tcp_jiffies32, bbr->probe_rtt_done_stamp)) {
+				bbr->min_rtt_stamp = tcp_jiffies32;
+				bbr->restore_cwnd = 1;  /* snap to prior_cwnd */
+				bbr_reset_mode(sk);
+			}
 		}
 	}
 	/* Restart after idle ends only once we process a new S/ACK for data */
