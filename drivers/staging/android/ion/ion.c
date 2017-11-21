@@ -352,6 +352,15 @@ static int ion_dma_buf_end_cpu_access(struct dma_buf *dmabuf,
 	return 0;
 }
 
+static int ion_dma_buf_get_flags(struct dma_buf *dmabuf,
+				 unsigned long *flags)
+{
+	struct ion_buffer *buffer = container_of(dmabuf->priv, typeof(*buffer), iommu_data);
+	*flags = buffer->flags;
+
+ 	return 0;
+}
+
 static const struct dma_buf_ops ion_dma_buf_ops = {
 	.map_dma_buf = ion_map_dma_buf,
 	.unmap_dma_buf = ion_unmap_dma_buf,
@@ -360,7 +369,8 @@ static const struct dma_buf_ops ion_dma_buf_ops = {
 	.begin_cpu_access = ion_dma_buf_begin_cpu_access,
 	.end_cpu_access = ion_dma_buf_end_cpu_access,
 	.kmap_atomic = ion_dma_buf_kmap,
-	.kmap = ion_dma_buf_kmap
+	.kmap = ion_dma_buf_kmap,
+	.get_flags = ion_dma_buf_get_flags
 };
 
 struct dma_buf *__ion_share_dma_buf(struct ion_buffer *buffer)
