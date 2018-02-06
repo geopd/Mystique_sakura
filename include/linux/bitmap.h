@@ -66,17 +66,24 @@
 /*
  * Also the following operations in asm/bitops.h apply to bitmaps.
  *
- * set_bit(bit, addr)			*addr |= bit
- * clear_bit(bit, addr)			*addr &= ~bit
- * change_bit(bit, addr)		*addr ^= bit
- * test_bit(bit, addr)			Is bit set in *addr?
- * test_and_set_bit(bit, addr)		Set bit and return old value
- * test_and_clear_bit(bit, addr)	Clear bit and return old value
- * test_and_change_bit(bit, addr)	Change bit and return old value
- * find_first_zero_bit(addr, nbits)	Position first zero bit in *addr
- * find_first_bit(addr, nbits)		Position first set bit in *addr
- * find_next_zero_bit(addr, nbits, bit)	Position next zero bit in *addr >= bit
- * find_next_bit(addr, nbits, bit)	Position next set bit in *addr >= bit
+ * Also the following operations in asm/bitops.h apply to bitmaps.::
+ *
+ *  set_bit(bit, addr)                  *addr |= bit
+ *  clear_bit(bit, addr)                *addr &= ~bit
+ *  change_bit(bit, addr)               *addr ^= bit
+ *  test_bit(bit, addr)                 Is bit set in *addr?
+ *  test_and_set_bit(bit, addr)         Set bit and return old value
+ *  test_and_clear_bit(bit, addr)       Clear bit and return old value
+ *  test_and_change_bit(bit, addr)      Change bit and return old value
+ *  find_first_zero_bit(addr, nbits)    Position first zero bit in *addr
+ *  find_first_bit(addr, nbits)         Position first set bit in *addr
+ *  find_next_zero_bit(addr, nbits, bit)
+ *                                      Position next zero bit in *addr >= bit
+ *  find_next_bit(addr, nbits, bit)     Position next set bit in *addr >= bit
+ *  find_next_and_bit(addr1, addr2, nbits, bit)
+ *                                      Same as find_next_bit, but in
+ *                                      (*addr1 & *addr2)
+ *
  */
 
 /*
