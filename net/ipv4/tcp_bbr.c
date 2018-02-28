@@ -68,7 +68,7 @@ struct bbr {
 		round_start:1,	     /* start of packet-timed tx->ack round? */
 		idle_restart:1,	     /* restarting after idle? */
 		probe_rtt_round_done:1,  /* a BBR_PROBE_RTT round at 4 pkts? */
-		unused:13,
+		unused:12,
 		lt_is_sampling:1,    /* taking long-term ("LT") samples now? */
 		lt_rtt_cnt:7,	     /* round trips in long-term interval */
 		lt_use_bw:1;	     /* use lt_bw as our bw estimate? */
@@ -244,7 +244,6 @@ static u32 bbr_min_tso_segs(struct sock *sk)
 static u32 bbr_tso_segs_goal(struct sock *sk)
 {
 	struct tcp_sock *tp = tcp_sk(sk);
-	struct bbr *bbr = inet_csk_ca(sk);
 	u32 segs, bytes;
 
 	/* Sort of tcp_tso_autosize() but ignoring
@@ -254,7 +253,7 @@ static u32 bbr_tso_segs_goal(struct sock *sk)
 		      GSO_MAX_SIZE - 1 - MAX_TCP_HEADER);
 	segs = max_t(u32, bytes / tp->mss_cache, bbr_min_tso_segs(sk));
 
-	bbr->tso_segs_goal = min(segs, 0x7FU);
+	return min(segs, 0x7FU);
 }
 
 /* Save "last known good" cwnd so we can restore it after losses or PROBE_RTT */
@@ -867,7 +866,6 @@ static void bbr_init(struct sock *sk)
 	struct bbr *bbr = inet_csk_ca(sk);
 
 	bbr->prior_cwnd = 0;
-	tp->snd_ssthresh = TCP_INFINITE_SSTHRESH;
 	bbr->rtt_cnt = 0;
 	bbr->next_rtt_delivered = tp->delivered;
 	bbr->prev_ca_state = TCP_CA_Open;
