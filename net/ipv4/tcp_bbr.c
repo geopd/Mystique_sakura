@@ -244,6 +244,7 @@ static u32 bbr_min_tso_segs(struct sock *sk)
 static u32 bbr_tso_segs_goal(struct sock *sk)
 {
 	struct tcp_sock *tp = tcp_sk(sk);
+	struct bbr *bbr = inet_csk_ca(sk);
 	u32 segs, bytes;
 
 	/* Sort of tcp_tso_autosize() but ignoring
@@ -253,7 +254,7 @@ static u32 bbr_tso_segs_goal(struct sock *sk)
 		      GSO_MAX_SIZE - 1 - MAX_TCP_HEADER);
 	segs = max_t(u32, bytes / tp->mss_cache, bbr_min_tso_segs(sk));
 
-	return min(segs, 0x7FU);
+	bbr->tso_segs_goal = min(segs, 0x7FU);
 }
 
 /* Save "last known good" cwnd so we can restore it after losses or PROBE_RTT */
