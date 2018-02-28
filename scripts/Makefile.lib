@@ -290,6 +290,8 @@ DTC_FLAGS += -Wno-unit_address_vs_reg \
 	-Wno-avoid_default_addr_size \
 	-Wno-reg_format \
 	-Wno-unit_address_format \
+	-Wno-avoid_unnecessary_addr_size \
+	-Wno-alias_paths \
 	-Wno-pci_device_reg
 endif
 
