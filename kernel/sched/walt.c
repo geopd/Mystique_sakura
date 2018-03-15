@@ -3325,6 +3325,8 @@ void walt_irq_work(struct irq_work *irq_work)
 		walt_update_coloc_boost_load();
 
 	for_each_sched_cluster(cluster) {
+		unsigned int num_cpus = cpumask_weight(&cluster->cpus), i = 1;
+
 		for_each_cpu(cpu, &cluster->cpus) {
 			int flag = SCHED_CPUFREQ_WALT;
 
@@ -3339,7 +3341,12 @@ void walt_irq_work(struct irq_work *irq_work)
 				}
 			}
 
-			cpufreq_update_util(rq, flag);
+			if (i == num_cpus)
+				cpufreq_update_util(rq, flag);
+			else
+				cpufreq_update_util(rq, flag |
+							SCHED_CPUFREQ_CONTINUE);
+			i++;
 		}
 	}
 
