@@ -15,6 +15,7 @@
  */
 
 #include <crypto/algapi.h>
+#include <crypto/internal/skcipher.h>
 #include <linux/err.h>
 #include <linux/init.h>
 #include <linux/kernel.h>
@@ -77,7 +78,7 @@ static int crypto_pcbc_encrypt_inplace(struct blkcipher_desc *desc,
 	unsigned int nbytes = walk->nbytes;
 	u8 *src = walk->src.virt.addr;
 	u8 * const iv = walk->iv;
-	u8 tmpbuf[bsize];
+	u8 tmpbuf[MAX_CIPHER_BLOCKSIZE];
 
 	do {
 		memcpy(tmpbuf, src, bsize);
@@ -153,7 +154,7 @@ static int crypto_pcbc_decrypt_inplace(struct blkcipher_desc *desc,
 	unsigned int nbytes = walk->nbytes;
 	u8 *src = walk->src.virt.addr;
 	u8 * const iv = walk->iv;
-	u8 tmpbuf[bsize];
+	u8 tmpbuf[MAX_CIPHER_BLOCKSIZE] __attribute__ ((aligned(__alignof__(u32))));
 
 	do {
 		memcpy(tmpbuf, src, bsize);
