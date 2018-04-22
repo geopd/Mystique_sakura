@@ -52,6 +52,7 @@ struct rs_control {
 	int		(*gffunc)(int);
 	int		users;
 	struct list_head list;
+	uint16_t	buffers[0];
 };
 
 /* General purpose RS codec, 8-bit data width, symbol width 1-15 bit  */

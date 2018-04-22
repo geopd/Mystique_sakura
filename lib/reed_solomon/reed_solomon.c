@@ -46,6 +46,18 @@
 #include <linux/slab.h>
 #include <linux/mutex.h>
 
+enum {
+	RS_DECODE_LAMBDA,
+	RS_DECODE_SYN,
+	RS_DECODE_B,
+	RS_DECODE_T,
+	RS_DECODE_OMEGA,
+	RS_DECODE_ROOT,
+	RS_DECODE_REG,
+	RS_DECODE_LOC,
+	RS_DECODE_NUM_BUFFERS
+};
+
 /* This list holds all currently allocated rs control structures */
 static LIST_HEAD (rslist);
 /* Protection for the list */
@@ -202,6 +214,7 @@ static struct rs_control *init_rs_internal(int symsize, int gfpoly,
 {
 	struct list_head	*tmp;
 	struct rs_control	*rs;
+	unsigned int bsize;
 
 	/* Sanity checks */
 	if (symsize < 1)
@@ -211,6 +224,16 @@ static struct rs_control *init_rs_internal(int symsize, int gfpoly,
 	if (prim <= 0 || prim >= (1<<symsize))
     		return NULL;
 	if (nroots < 0 || nroots >= (1<<symsize))
+		return NULL;
+
+	/*
+	 * The decoder needs buffers in each control struct instance to
+	 * avoid variable size or large fixed size allocations on
+	 * stack. Size the buffers to arrays of [nroots + 1].
+	 */
+	bsize = sizeof(uint16_t) * RS_DECODE_NUM_BUFFERS * (nroots + 1);
+	rs = kzalloc(sizeof(*rs) + bsize, GFP_KERNEL);
+	if (!rs)
 		return NULL;
 
 	mutex_lock(&rslistlock);
@@ -319,6 +342,11 @@ EXPORT_SYMBOL_GPL(encode_rs8);
  *  The syndrome and parity uses a uint16_t data type to enable
  *  symbol size > 8. The calling code must take care of decoding of the
  *  syndrome result and the received parity before calling this code.
+ *
+ *  Note: The rs_control struct @rsc contains buffers which are used for
+ *  decoding, so the caller has to ensure that decoder invocations are
+ *  serialized.
+ *
  *  Returns the number of corrected bits or -EBADMSG for uncorrectable errors.
  */
 int decode_rs8(struct rs_control *rs, uint8_t *data, uint16_t *par, int len,
@@ -363,6 +391,11 @@ EXPORT_SYMBOL_GPL(encode_rs16);
  *  @corr:	buffer to store correction bitmask on eras_pos
  *
  *  Each field in the data array contains up to symbol size bits of valid data.
+ *
+ *  Note: The rc_control struct @rsc contains buffers which are used for
+ *  decoding, so the caller has to ensure that decoder invocations are
+ *  serialized.
+ *
  *  Returns the number of corrected bits or -EBADMSG for uncorrectable errors.
  */
 int decode_rs16(struct rs_control *rs, uint16_t *data, uint16_t *par, int len,
