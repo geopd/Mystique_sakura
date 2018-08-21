@@ -3409,7 +3409,7 @@ static void walt_init_once(void)
 		scale_demand(sched_init_task_load_windows);
 }
 
-void walt_sched_init(struct rq *rq)
+void walt_sched_init_rq(struct rq *rq)
 {
 	int j;
 
@@ -3417,6 +3417,7 @@ void walt_sched_init(struct rq *rq)
 		walt_init_once();
 
 	cpumask_set_cpu(cpu_of(rq), &rq->freq_domain_cpumask);
+
 	rq->walt_stats.cumulative_runnable_avg_scaled = 0;
 	rq->window_start = 0;
 	rq->cum_window_start = 0;
@@ -3462,7 +3463,4 @@ void walt_sched_init(struct rq *rq)
 	}
 	rq->cum_window_demand_scaled = 0;
 	rq->notif_pending = false;
-
-	walt_cpu_util_freq_divisor =
-	    (sched_ravg_window >> SCHED_CAPACITY_SHIFT) * 100;
 }
