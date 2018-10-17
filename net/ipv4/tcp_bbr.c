@@ -717,8 +717,6 @@ static void bbr_check_drain(struct sock *sk, const struct rate_sample *rs)
 
 	if (bbr->mode == BBR_STARTUP && bbr_full_bw_reached(sk)) {
 		bbr->mode = BBR_DRAIN;	/* drain queue we created */
-		bbr->pacing_gain = bbr_drain_gain;	/* pace slow to drain */
-		bbr->cwnd_gain = bbr_high_gain;	/* maintain cwnd */
 		tcp_sk(sk)->snd_ssthresh =
 				bbr_target_cwnd(sk, bbr_max_bw(sk), BBR_UNIT);
 	}	/* fall through to check if in-flight is already small: */
