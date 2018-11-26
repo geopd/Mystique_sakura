@@ -185,6 +185,7 @@ static int ipa_mhi_set_lock_unlock(bool is_lock)
 	return 0;
 }
 
+
 static int ipa_mhi_read_write_host(enum ipa_mhi_dma_dir dir, void *dev_addr,
 	u64 host_addr, int size)
 {
