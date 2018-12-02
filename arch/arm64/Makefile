@@ -52,7 +52,9 @@ endif
 
 KBUILD_CFLAGS	+= -mgeneral-regs-only $(lseinstr)
 KBUILD_CFLAGS	+= -fno-asynchronous-unwind-tables
+ifeq ($(CONFIG_ARM64_ERRATUM_843419),y)
 KBUILD_CFLAGS	+= $(call cc-option, -mpc-relative-literal-loads)
+endif
 KBUILD_CFLAGS	+= $(call cc-disable-warning, psabi)
 KBUILD_CFLAGS	+= -fno-pic
 KBUILD_AFLAGS	+= $(lseinstr)
