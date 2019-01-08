@@ -3043,6 +3043,7 @@ unsigned long do_thermal_cap(int cpu, unsigned long thermal_max_freq)
 	struct sched_domain *sd;
 	struct sched_group *sg;
 	struct rq *rq = cpu_rq(cpu);
+#ifdef CONFIG_ENERGY_MODEL
 	int nr_cap_states;
 
 	if (!max_cap[cpu]) {
@@ -3058,6 +3059,7 @@ unsigned long do_thermal_cap(int cpu, unsigned long thermal_max_freq)
 		max_cap[cpu] = sg->sge->cap_states[nr_cap_states - 1].cap;
 		rcu_read_unlock();
 	}
+#endif
 
 	if (cpu_max_table_freq[cpu])
 		return div64_ul(thermal_max_freq * max_cap[cpu],
