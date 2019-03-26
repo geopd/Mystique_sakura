@@ -7573,6 +7573,9 @@ static inline int find_best_target(struct task_struct *p, int *backup_cpu,
 
 	} while (sg = sg->next, sg != sd->groups);
 
+	if (prefer_idle && (best_idle_cpu != -1))
+		return best_idle_cpu;
+
 	if (best_idle_cpu != -1 && !is_packing_eligible(p, target_cpu, fbt_env,
 					active_cpus_count, best_idle_cstate,
 					boosted)) {
@@ -7601,9 +7604,6 @@ static inline int find_best_target(struct task_struct *p, int *backup_cpu,
 	 *   a) ACTIVE CPU: target_cpu
 	 *   b) IDLE CPU: best_idle_cpu
 	 */
-
-	if (prefer_idle && (best_idle_cpu != -1))
-		return best_idle_cpu;
 
 	if (target_cpu == -1)
 		target_cpu = prefer_idle
