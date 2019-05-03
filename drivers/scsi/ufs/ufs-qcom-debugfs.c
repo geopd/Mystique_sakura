@@ -366,17 +366,6 @@ void ufs_qcom_dbg_add_debugfs(struct ufs_hba *hba, struct dentry *root)
 		goto err;
 	}
 
-	host->debugfs_files.pm_qos =
-		debugfs_create_file("pm_qos", S_IRUSR,
-				host->debugfs_files.debugfs_root, host,
-				&ufs_qcom_dbg_pm_qos_desc);
-		if (!host->debugfs_files.dbg_regs) {
-			dev_err(host->hba->dev,
-				"%s: failed create dbg_regs debugfs entry\n",
-				__func__);
-			goto err;
-		}
-
 	return;
 
 err:
