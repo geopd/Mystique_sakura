@@ -801,10 +801,19 @@ void __init create_boot_cache(struct kmem_cache *s, const char *name, size_t siz
 		unsigned long flags)
 {
 	int err;
+	unsigned int align = ARCH_KMALLOC_MINALIGN;
 
 	s->name = name;
 	s->size = s->object_size = size;
-	s->align = calculate_alignment(flags, ARCH_KMALLOC_MINALIGN, size);
+
+	/*
+	 * For power of two sizes, guarantee natural alignment for kmalloc
+	 * caches, regardless of SL*B debugging options.
+	 */
+	if (is_power_of_2(size))
+		align = max(align, size);
+	s->align = calculate_alignment(flags, align, size);
+
 
 	slab_init_memcg_params(s);
 
@@ -1067,7 +1076,7 @@ void *kmalloc_order(size_t size, gfp_t flags, unsigned int order)
 		mod_node_page_state(page_pgdat(page), NR_SLAB_UNRECLAIMABLE,
 				    1 << order);
 	}
-	ret = kasan_kmalloc_large(ret, size, flags);
+	kasan_kmalloc_large(ret, size, flags);
 	/* As ret might get tagged, call kmemleak hook after KASAN. */
 	kmemleak_alloc(ret, size, 1, flags);
 	return ret;
