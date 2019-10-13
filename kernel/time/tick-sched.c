@@ -1024,6 +1024,21 @@ void tick_nohz_irq_exit(void)
 }
 
 /**
+ * tick_nohz_idle_got_tick - Check whether or not the tick handler has run
+ */
+bool tick_nohz_idle_got_tick(void)
+{
+	struct tick_sched *ts = this_cpu_ptr(&tick_cpu_sched);
+
+	if (ts->got_idle_tick) {
+		ts->got_idle_tick = 0;
+		return true;
+	}
+	return false;
+}
+
+
+/**
  * tick_nohz_get_sleep_length - return the length of the current sleep
  *
  * Called from power state control code with interrupts disabled

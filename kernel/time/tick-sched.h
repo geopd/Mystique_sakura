@@ -61,6 +61,7 @@ struct tick_sched {
 	ktime_t				idle_expires;
 	int				do_timer_last;
 	atomic_t			tick_dep_mask;
+	unsigned int			got_idle_tick	: 1;
 };
 
 extern struct tick_sched *tick_get_tick_sched(int cpu);
