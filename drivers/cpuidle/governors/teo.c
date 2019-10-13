@@ -48,7 +48,7 @@
 #include <linux/cpuidle.h>
 #include <linux/jiffies.h>
 #include <linux/kernel.h>
-#include <linux/sched/clock.h>
+#include <linux/sched.h>
 #include <linux/tick.h>
 
 /*
@@ -117,7 +117,7 @@ static DEFINE_PER_CPU(struct teo_cpu, teo_cpus);
 static void teo_update(struct cpuidle_driver *drv, struct cpuidle_device *dev)
 {
 	struct teo_cpu *cpu_data = per_cpu_ptr(&teo_cpus, dev->cpu);
-	unsigned int sleep_length_us = ktime_to_us(cpu_data->sleep_length_ns);
+	unsigned int sleep_length_us = ktime_to_us(ns_to_ktime(cpu_data->sleep_length_ns));
 	int i, idx_hit = -1, idx_timer = -1;
 	unsigned int measured_us;
 
@@ -133,7 +133,7 @@ static void teo_update(struct cpuidle_driver *drv, struct cpuidle_device *dev)
 
 		lat = drv->states[dev->last_state_idx].exit_latency;
 
-		measured_us = ktime_to_us(cpu_data->time_span_ns);
+		measured_us = ktime_to_us(ns_to_ktime(cpu_data->time_span_ns));
 		/*
 		 * The delay between the wakeup and the first instruction
 		 * executed by the CPU is not likely to be worst-case every
@@ -228,14 +228,12 @@ static int teo_find_shallower_state(struct cpuidle_driver *drv,
  * @dev: Target CPU.
  * @stop_tick: Indication on whether or not to stop the scheduler tick.
  */
-static int teo_select(struct cpuidle_driver *drv, struct cpuidle_device *dev,
-		      bool *stop_tick)
+static int teo_select(struct cpuidle_driver *drv, struct cpuidle_device *dev)
 {
 	struct teo_cpu *cpu_data = per_cpu_ptr(&teo_cpus, dev->cpu);
 	int latency_req = cpuidle_governor_latency_req(dev->cpu);
 	unsigned int duration_us, count;
 	int max_early_idx, constraint_idx, idx, i;
-	ktime_t delta_tick;
 
 	if (dev->last_state_idx >= 0) {
 		teo_update(drv, dev);
@@ -244,8 +242,8 @@ static int teo_select(struct cpuidle_driver *drv, struct cpuidle_device *dev,
 
 	cpu_data->time_span_ns = local_clock();
 
-	cpu_data->sleep_length_ns = tick_nohz_get_sleep_length(&delta_tick);
-	duration_us = ktime_to_us(cpu_data->sleep_length_ns);
+	cpu_data->sleep_length_ns = ktime_to_ns(tick_nohz_get_sleep_length());
+	duration_us = ktime_to_us(ns_to_ktime(cpu_data->sleep_length_ns));
 
 	count = 0;
 	max_early_idx = -1;
@@ -352,26 +350,6 @@ static int teo_select(struct cpuidle_driver *drv, struct cpuidle_device *dev,
 								       idx, avg_us);
 			}
 		}
-	}
-
-	/*
-	 * Don't stop the tick if the selected state is a polling one or if the
-	 * expected idle duration is shorter than the tick period length.
-	 */
-	if (((drv->states[idx].flags & CPUIDLE_FLAG_POLLING) ||
-	    duration_us < TICK_USEC) && !tick_nohz_tick_stopped()) {
-		unsigned int delta_tick_us = ktime_to_us(delta_tick);
-
-		*stop_tick = false;
-
-		/*
-		 * The tick is not going to be stopped, so if the target
-		 * residency of the state to be returned is not within the time
-		 * till the closest timer including the tick, try to correct
-		 * that.
-		 */
-		if (idx > 0 && drv->states[idx].target_residency > delta_tick_us)
-			idx = teo_find_shallower_state(drv, dev, idx, delta_tick_us);
 	}
 
 	return idx;

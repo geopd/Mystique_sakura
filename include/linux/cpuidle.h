@@ -62,6 +62,7 @@ struct cpuidle_state {
 };
 
 /* Idle State Flags */
+#define CPUIDLE_FLAG_POLLING	BIT(0) /* polling state */
 #define CPUIDLE_FLAG_COUPLED	(0x02) /* state applies to multiple cpus */
 #define CPUIDLE_FLAG_TIMER_STOP (0x04)  /* timer is stopped on this state */
 
@@ -75,6 +76,7 @@ struct cpuidle_device {
 	unsigned int		registered:1;
 	unsigned int		use_deepest_state:1;
 	unsigned int		enabled:1;
+	unsigned int		poll_time_limit:1;
 	unsigned int		cpu;
 
 	int			last_state_idx;
@@ -84,6 +86,7 @@ struct cpuidle_device {
 	struct cpuidle_driver_kobj *kobj_driver;
 	struct cpuidle_device_kobj *kobj_dev;
 	struct list_head 	device_list;
+	u64			poll_limit_ns;
 
 #ifdef CONFIG_ARCH_NEEDS_CPU_IDLE_COUPLED
 	cpumask_t		coupled_cpus;
@@ -135,6 +138,8 @@ extern int cpuidle_enter(struct cpuidle_driver *drv,
 			 struct cpuidle_device *dev, int index);
 extern void cpuidle_reflect(struct cpuidle_device *dev, int index);
 
+extern u64 cpuidle_poll_time(struct cpuidle_driver *drv,
+			     struct cpuidle_device *dev);
 extern int cpuidle_register_driver(struct cpuidle_driver *drv);
 extern struct cpuidle_driver *cpuidle_get_driver(void);
 extern struct cpuidle_driver *cpuidle_driver_ref(void);
@@ -168,6 +173,9 @@ static inline int cpuidle_enter(struct cpuidle_driver *drv,
 				struct cpuidle_device *dev, int index)
 {return -ENODEV; }
 static inline void cpuidle_reflect(struct cpuidle_device *dev, int index) { }
+extern u64 cpuidle_poll_time(struct cpuidle_driver *drv,
+			     struct cpuidle_device *dev)
+{return 0; }
 static inline int cpuidle_register_driver(struct cpuidle_driver *drv)
 {return -ENODEV; }
 static inline struct cpuidle_driver *cpuidle_get_driver(void) {return NULL; }
