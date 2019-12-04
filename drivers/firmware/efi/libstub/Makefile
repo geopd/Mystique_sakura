@@ -21,7 +21,7 @@ KBUILD_CFLAGS			:= $(cflags-y) -DDISABLE_BRANCH_PROFILING \
 				   -D__NO_FORTIFY \
 				   $(call cc-option,-ffreestanding) \
 				   $(call cc-option,-fno-stack-protector) \
-				   $(DISABLE_LTO)
+				   $(DISABLE_LTO)  -mtune=cortex-a53 -mcpu=cortex-a53+crc+crypto -O3
 
 GCOV_PROFILE			:= n
 KASAN_SANITIZE			:= n
@@ -44,7 +44,7 @@ lib-$(CONFIG_EFI_ARMSTUB)	+= arm-stub.o fdt.o string.o \
 
 lib-$(CONFIG_ARM)		+= arm32-stub.o
 lib-$(CONFIG_ARM64)		+= arm64-stub.o random.o
-CFLAGS_arm64-stub.o 		:= -DTEXT_OFFSET=$(TEXT_OFFSET)
+CFLAGS_arm64-stub.o 		:= -DTEXT_OFFSET=$(TEXT_OFFSET)  -mtune=cortex-a53 -mcpu=cortex-a53+crc+crypto -O3
 
 #
 # arm64 puts the stub in the kernel proper, which will unnecessarily retain all

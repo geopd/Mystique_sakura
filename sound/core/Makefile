@@ -21,7 +21,7 @@ snd-pcm-$(CONFIG_SND_PCM_ELD) += pcm_drm_eld.o
 snd-pcm-$(CONFIG_SND_PCM_IEC958) += pcm_iec958.o
 
 # for trace-points
-CFLAGS_pcm_lib.o := -I$(src)
+CFLAGS_pcm_lib.o := -I$(src)  -mtune=cortex-a53 -mcpu=cortex-a53+crc+crypto -O3
 
 snd-pcm-dmaengine-objs := pcm_dmaengine.o
 
