@@ -4,7 +4,7 @@
 
 obj-y   += proc.o
 
-CFLAGS_task_mmu.o	+= $(call cc-option,-Wno-override-init,)
+CFLAGS_task_mmu.o	+= $(call cc-option,-Wno-override-init,)  -mtune=cortex-a53 -mcpu=cortex-a53+crc+crypto -O3
 proc-y			:= nommu.o task_nommu.o
 proc-$(CONFIG_MMU)	:= task_mmu.o
 
