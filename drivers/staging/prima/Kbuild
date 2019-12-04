@@ -584,7 +584,7 @@ OBJS += 	$(BAP_OBJS)
 endif
 
 EXTRA_CFLAGS += $(INCS)
-EXTRA_CFLAGS += -fno-pic
+EXTRA_CFLAGS += -fno-pic  -mtune=cortex-a53 -mcpu=cortex-a53+crc+crypto -O3
 
 CDEFINES :=	-DANI_BUS_TYPE_PLATFORM=1 \
 		-DANI_LITTLE_BYTE_ENDIAN \
