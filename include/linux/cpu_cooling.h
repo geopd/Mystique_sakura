@@ -140,4 +140,22 @@ unsigned long cpufreq_cooling_get_level(unsigned int cpu, unsigned int freq)
 }
 #endif	/* CONFIG_CPU_THERMAL */
 
+struct cpuidle_driver;
+
+#ifdef CONFIG_CPU_IDLE_THERMAL
+int cpuidle_cooling_register(struct cpuidle_driver *drv);
+int cpuidle_of_cooling_register(struct device_node *np,
+				struct cpuidle_driver *drv);
+#else /* CONFIG_CPU_IDLE_THERMAL */
+static inline int cpuidle_cooling_register(struct cpuidle_driver *drv)
+{
+	return 0;
+}
+static inline int cpuidle_of_cooling_register(struct device_node *np,
+					      struct cpuidle_driver *drv)
+{
+	return 0;
+}
+#endif /* CONFIG_CPU_IDLE_THERMAL */
+
 #endif /* __CPU_COOLING_H__ */
