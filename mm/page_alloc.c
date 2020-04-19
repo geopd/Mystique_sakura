@@ -1118,7 +1118,7 @@ static bool bulkfree_pcp_prepare(struct page *page)
 static inline void prefetch_buddy(struct page *page)
 {
 	unsigned long pfn = page_to_pfn(page);
-	unsigned long buddy_pfn = __find_buddy_pfn(pfn, 0);
+	unsigned long buddy_pfn = __find_buddy_index(pfn, 0);
 	struct page *buddy = page + (buddy_pfn - pfn);
 
 	prefetch(buddy);
