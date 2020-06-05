@@ -91,7 +91,7 @@ ifeq ($(CONFIG_COMPAT_VDSO), y)
   endif
 endif
 
-KBUILD_CFLAGS	+= -mgeneral-regs-only $(lseinstr) $(vdso32)
+KBUILD_CFLAGS	+= -mgeneral-regs-only $(lseinstr) $(vdso32) -O3 -march=armv8-a+crc+crypto -mtune=cortex-a53
 KBUILD_CFLAGS	+= -fno-asynchronous-unwind-tables
 ifeq ($(CONFIG_ARM64_ERRATUM_843419),y)
 KBUILD_CFLAGS	+= $(call cc-option, -mpc-relative-literal-loads)
