@@ -22,6 +22,7 @@
 #include <linux/slab.h>
 #include <linux/suspend.h>
 #include <linux/tick.h>
+#include <linux/cpu_cooling.h>
 #include <trace/events/power.h>
 
 #include "cpuidle.h"
@@ -663,8 +664,12 @@ int cpuidle_register(struct cpuidle_driver *drv,
 			device->coupled_cpus = *coupled_cpus;
 #endif
 		ret = cpuidle_register_device(device);
-		if (!ret)
+		if (!ret) {
+			ret = cpuidle_cooling_register(drv);
+			if (ret) 
+				printk_deferred("cpuidle_cool: Failed to register");
 			continue;
+		}
 
 		pr_err("Failed to register cpuidle device for cpu%d\n", cpu);
 
@@ -739,7 +744,7 @@ static int __init cpuidle_init(void)
 	ret = cpuidle_add_interface(cpu_subsys.dev_root);
 	if (ret)
 		return ret;
-
+	
 	latency_notifier_init(&cpuidle_latency_notifier);
 
 	return 0;
