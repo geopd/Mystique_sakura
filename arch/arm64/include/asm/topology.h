@@ -42,6 +42,9 @@ extern unsigned long cpufreq_scale_max_freq_capacity(struct sched_domain *sd, in
 extern unsigned long cpufreq_scale_min_freq_capacity(struct sched_domain *sd, int cpu);
 #endif
 #define arch_scale_cpu_capacity scale_cpu_capacity
+/* Replace task scheduler's default thermal pressure retrieve API */
+#define arch_scale_thermal_pressure topology_get_thermal_pressure
+
 extern unsigned long scale_cpu_capacity(struct sched_domain *sd, int cpu);
 
 #define arch_update_cpu_capacity update_cpu_power_capacity

@@ -945,11 +945,13 @@ static int cpufreq_power2state(struct thermal_cooling_device *cdev,
 			       unsigned long *state)
 {
 	unsigned int cpu, cur_freq, target_freq;
-	int ret;
 	s32 dyn_power;
 	u32 last_load, normalised_power, static_power;
 	struct cpufreq_cooling_device *cpufreq_device = cdev->devdata;
-
+	struct cpumask *cpus;
+	unsigned long max_capacity, capacity;
+	int ret;
+ 
 	cpu = cpumask_any_and(&cpufreq_device->allowed_cpus, cpu_online_mask);
 
 	/* None of our cpus are online */
@@ -958,15 +960,21 @@ static int cpufreq_power2state(struct thermal_cooling_device *cdev,
 
 	cur_freq = cpufreq_quick_get(cpu);
 	ret = get_static_power(cpufreq_device, tz, cur_freq, &static_power);
-	if (ret)
+	if (ret) {
+		cpus = cpufreq_device->policy->cpus;
+		max_capacity = arch_scale_cpu_capacity(NULL, cpumask_first(cpus));
+		capacity = cur_freq * max_capacity;
+		capacity /= cpufreq_device->policy->cpuinfo.max_freq;
+		arch_set_thermal_pressure(cpus, max_capacity - capacity);
 		return ret;
+	}
 
 	dyn_power = power - static_power;
 	dyn_power = dyn_power > 0 ? dyn_power : 0;
 	last_load = cpufreq_device->last_load ?: 1;
 	normalised_power = (dyn_power * 100) / last_load;
 	target_freq = cpu_power_to_freq(cpufreq_device, normalised_power);
-
+	
 	*state = cpufreq_cooling_get_level(cpu, target_freq);
 	if (*state == THERMAL_CSTATE_INVALID) {
 		dev_warn_ratelimited(&cdev->device,
