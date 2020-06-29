@@ -3225,6 +3225,17 @@ unsigned long long task_sched_runtime(struct task_struct *p)
 	return ns;
 }
 
+DEFINE_PER_CPU(unsigned long, thermal_pressure);
+
+void arch_set_thermal_pressure(struct cpumask *cpus,
+			       unsigned long th_pressure)
+{
+	int cpu;
+
+	for_each_cpu(cpu, cpus)
+		WRITE_ONCE(per_cpu(thermal_pressure, cpu), th_pressure);
+}
+
 unsigned int capacity_margin_freq = 1280; /* ~20% margin */
 
 /*
@@ -3241,6 +3252,7 @@ void scheduler_tick(void)
 	u32 old_load;
 	struct related_thread_group *grp;
 	unsigned int flag = 0;
+	unsigned long thermal_pressure;
 
 	sched_clock_tick();
 
@@ -3253,6 +3265,8 @@ void scheduler_tick(void)
 	update_task_ravg(rq->curr, rq, TASK_UPDATE, wallclock, 0);
 
 	update_rq_clock(rq);
+	thermal_pressure = arch_scale_thermal_pressure(cpu_of(rq));
+	update_thermal_load_avg(rq_clock_task(rq), rq, thermal_pressure);
 	curr->sched_class->task_tick(rq, curr, 0);
 	cpu_load_update_active(rq);
 	calc_global_load_tick(rq);

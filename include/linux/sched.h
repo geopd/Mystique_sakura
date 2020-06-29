@@ -3963,4 +3963,12 @@ void cpufreq_remove_update_util_hook(int cpu);
 
 extern DEFINE_PER_CPU_READ_MOSTLY(int, sched_load_boost);
 
+DECLARE_PER_CPU(unsigned long, thermal_pressure);
+
+static inline unsigned long topology_get_thermal_pressure(int cpu)
+{
+	return per_cpu(thermal_pressure, cpu);
+}
+
+void arch_set_thermal_pressure(struct cpumask *cpus,  unsigned long th_pressure);
 #endif

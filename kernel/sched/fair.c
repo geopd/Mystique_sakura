@@ -3228,14 +3228,19 @@ static inline int test_and_clear_tg_cfs_propagate(struct sched_entity *se)
 static inline int propagate_entity_load_avg(struct sched_entity *se)
 {
 	struct cfs_rq *cfs_rq;
+	struct rq *rq;
 
 	if (entity_is_task(se))
 		return 0;
 
 	if (!test_and_clear_tg_cfs_propagate(se))
 		return 0;
-
+	
 	cfs_rq = cfs_rq_of(se);
+	rq = rq_of(cfs_rq);
+	
+	if (!READ_ONCE(rq->avg_thermal.load_avg))
+		return 0;
 
 	set_tg_cfs_propagate(cfs_rq);
 
@@ -3349,7 +3354,9 @@ static inline int
 update_cfs_rq_load_avg(u64 now, struct cfs_rq *cfs_rq, bool update_freq)
 {
 	struct sched_avg *sa = &cfs_rq->avg;
+	struct rq *rq = rq_of(cfs_rq);
 	int decayed, removed_load = 0, removed_util = 0;
+	unsigned long thermal_pressure;
 
 	if (atomic_long_read(&cfs_rq->removed_load_avg)) {
 		s64 r = atomic_long_xchg(&cfs_rq->removed_load_avg, 0);
@@ -3367,8 +3374,10 @@ update_cfs_rq_load_avg(u64 now, struct cfs_rq *cfs_rq, bool update_freq)
 		set_tg_cfs_propagate(cfs_rq);
 	}
 
+	thermal_pressure = arch_scale_thermal_pressure(cpu_of(rq));
 	decayed = __update_load_avg(now, cpu_of(rq_of(cfs_rq)), sa,
-		scale_load_down(cfs_rq->load.weight), cfs_rq->curr != NULL, cfs_rq);
+		scale_load_down(cfs_rq->load.weight), cfs_rq->curr != NULL, cfs_rq) |
+		 update_thermal_load_avg(rq_clock_task(rq), rq, thermal_pressure);
 
 #ifndef CONFIG_64BIT
 	smp_wmb();
@@ -3423,6 +3432,38 @@ static inline void update_load_avg(struct sched_entity *se, int flags)
 #endif
 		trace_sched_load_avg_task(task_of(se), &se->avg, ptr);
 	}
+}
+
+/*
+ * thermal:
+ *
+ *   load_sum = \Sum se->avg.load_sum but se->avg.load_sum is not tracked
+ *
+ *   util_avg and runnable_load_avg are not supported and meaningless.
+ *
+ * Unlike rt/dl utilization tracking that track time spent by a cpu
+ * running a rt/dl task through util_avg, the average thermal pressure is
+ * tracked through load_avg. This is because thermal pressure signal is
+ * time weighted "delta" capacity unlike util_avg which is binary.
+ * "delta capacity" =  actual capacity  -
+ *			capped capacity a cpu due to a thermal event.
+ */
+
+int update_thermal_load_avg(u64 now, struct rq *rq, u64 capacity)
+{
+	int cpu = cpu_of(rq);
+
+	if (__update_load_avg(now, cpu, &rq->avg_thermal,
+			       capacity,
+			       capacity,
+			       NULL)) {
+		__update_load_avg(now, cpu, &rq->avg_thermal,
+			  1, 0, NULL);
+
+		return 1;
+	}
+
+	return 0;
 }
 
 /**
@@ -8995,6 +9036,7 @@ static unsigned long scale_rt_capacity(int cpu)
 	total = sched_avg_period() + delta;
 
 	used = div_u64(avg, total);
+	used += READ_ONCE(rq->avg_thermal.load_avg);
 
 	if (likely(used < SCHED_CAPACITY_SCALE))
 		return SCHED_CAPACITY_SCALE - used;
