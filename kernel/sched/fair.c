@@ -6266,7 +6266,7 @@ static int wake_affine(struct sched_domain *sd, struct task_struct *p,
 		prev_eff_load *= load + effective_load(tg, prev_cpu, 0, weight);
 	}
 
-	balanced = this_eff_load <= prev_eff_load;
+	balanced = this_eff_load <= prev_eff_load ? this_cpu : nr_cpumask_bits;
 
 	schedstat_inc(p->se.statistics.nr_wakeups_affine_attempts);
 
@@ -6867,7 +6867,7 @@ static int select_idle_sibling(struct task_struct *p, int prev, int target)
 {
 	struct sched_domain *sd;
 	struct sched_group *sg;
-	int i = task_cpu(p);
+	int i = task_cpu(p),  recent_used_cpu;
 	int best_idle_cpu = -1;
 	int best_idle_cstate = INT_MAX;
 	unsigned long best_idle_capacity = ULONG_MAX;
@@ -6888,7 +6888,23 @@ static int select_idle_sibling(struct task_struct *p, int prev, int target)
 		if (i != target && cpus_share_cache(i, target) && idle_cpu(i)) {
 			schedstat_inc(p->se.statistics.nr_wakeups_sis_cache_affine);
 			schedstat_inc(this_rq()->eas_stats.sis_cache_affine);
-			return i;
+			return idle_cpu(prev) ? prev : i;
+		}
+
+		/* Check a recently used CPU as a potential idle candidate */
+		recent_used_cpu = p->recent_used_cpu;
+		if (recent_used_cpu != prev &&
+	    		recent_used_cpu != target &&
+	    		cpus_share_cache(recent_used_cpu, target) &&
+	    		idle_cpu(recent_used_cpu) &&
+	    		cpumask_test_cpu(p->recent_used_cpu, &p->cpus_allowed)) {
+				
+			 /*
+		 	  * Replace recent_used_cpu with prev as it is a potential
+		 	  * candidate for the next wake.
+		  	  */
+			 p->recent_used_cpu = prev;
+			return recent_used_cpu;
 		}
 
 		sd = rcu_dereference(per_cpu(sd_llc, target));
@@ -7816,8 +7832,7 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag, int wake_f
 
 	if (affine_sd) {
 		sd = NULL; /* Prefer wake_affine over balance flags */
-		if (cpu != prev_cpu && wake_affine(affine_sd, p, prev_cpu, sync))
-			new_cpu = cpu;
+		new_cpu = wake_affine(affine_sd, p, prev_cpu, sync);
 	}
 
 	if (sd && !(sd_flag & SD_BALANCE_FORK)) {
@@ -7830,8 +7845,11 @@ select_task_rq_fair(struct task_struct *p, int prev_cpu, int sd_flag, int wake_f
 	}
 
 	if (!sd) {
-		if (sd_flag & SD_BALANCE_WAKE) /* XXX always ? */
+		if (sd_flag & SD_BALANCE_WAKE) { /* XXX always ? */
 			new_cpu = select_idle_sibling(p, prev_cpu, new_cpu);
+			if (want_affine)
+				current->recent_used_cpu = cpu;
+		}
 
 	} else {
 		new_cpu = find_idlest_cpu(sd, p, cpu, prev_cpu, sd_flag);
