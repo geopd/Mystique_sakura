@@ -19,7 +19,7 @@ ghash-ce-y := ghash-ce-glue.o ghash-ce-core.o
 
 obj-$(CONFIG_CRYPTO_AES_ARM64_CE) += aes-ce-cipher.o
 aes-ce-cipher-y := aes-ce-cipher-glue.o aes-ce-cipher-core.o
-CFLAGS_aes-ce-cipher-core.o +=  -Wa, $(call cc-option,-no-integrated-as) $(DISABLE_LTO) -mtune=cortex-a53 -mcpu=cortex-a53+crc+crypto -O3
+CFLAGS_aes-ce-cipher-core.o += -mtune=cortex-a53 -mcpu=cortex-a53+crc+crypto -O3
 
 obj-$(CONFIG_CRYPTO_AES_ARM64_CE_CCM) += aes-ce-ccm.o
 aes-ce-ccm-y := aes-ce-ccm-glue.o aes-ce-ccm-core.o
