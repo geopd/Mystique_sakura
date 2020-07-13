@@ -935,7 +935,7 @@ static void sde_rotator_req_wait_for_idle(struct sde_rot_mgr *mgr,
 		hw = queue->hw;
 		while (atomic_read(&hw->num_active) > 1) {
 			sde_rot_mgr_unlock(mgr);
-			ret = wait_event_timeout(hw->wait_queue,
+			ret = wait_event_interruptible_timeout(hw->wait_queue,
 				atomic_read(&hw->num_active) <= 1,
 				msecs_to_jiffies(mgr->hwacquire_timeout));
 			sde_rot_mgr_lock(mgr);
