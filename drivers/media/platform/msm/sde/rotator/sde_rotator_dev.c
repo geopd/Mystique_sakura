@@ -458,7 +458,7 @@ static void sde_rotator_stop_streaming(struct vb2_queue *q)
 			!list_empty(&ctx->pending_list));
 	ctx->abort_pending = 1;
 	mutex_unlock(q->lock);
-	ret = wait_event_timeout(ctx->wait_queue,
+	ret = wait_event_interruptible_timeout(ctx->wait_queue,
 			list_empty(&ctx->pending_list),
 			msecs_to_jiffies(rot_dev->streamoff_timeout));
 	mutex_lock(q->lock);
