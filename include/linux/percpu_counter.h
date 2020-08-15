@@ -16,13 +16,26 @@
 
 #ifdef CONFIG_SMP
 
-struct percpu_counter {
-	raw_spinlock_t lock;
-	s64 count;
+/*
+ * For performance reasons, we keep this part in a separate cache line
+ */
+struct percpu_counter_rw {
+	atomic64_t	count;
+	unsigned int	sequence;
+	atomic64_t	slowcount;
+
+	/* since we have plenty room, store list here, even if never used */
 #ifdef CONFIG_HOTPLUG_CPU
 	struct list_head list;	/* All percpu_counters are on a list */
+	struct percpu_counter *fbc;
 #endif
 	s32 __percpu *counters;
+} ____cacheline_aligned_in_smp;
+
+struct percpu_counter {
+	atomic_t		 sum_cnt; /* count of in flight sum() */
+	struct percpu_counter_rw *pcrw;
+	s32 __percpu		 *counters;
 };
 
 extern int percpu_counter_batch;
@@ -66,7 +79,9 @@ static inline s64 percpu_counter_sum(struct percpu_counter *fbc)
 
 static inline s64 percpu_counter_read(struct percpu_counter *fbc)
 {
-	return fbc->count;
+	struct percpu_counter_rw *pcrw = fbc->pcrw;
+
+	return atomic64_read(&pcrw->count) + atomic64_read(&pcrw->slowcount);
 }
 
 /*
@@ -76,9 +91,8 @@ static inline s64 percpu_counter_read(struct percpu_counter *fbc)
  */
 static inline s64 percpu_counter_read_positive(struct percpu_counter *fbc)
 {
-	/* Prevent reloads of fbc->count */
-	s64 ret = READ_ONCE(fbc->count);
-
+	s64 ret = percpu_counter_read(fbc);
+	
 	if (ret >= 0)
 		return ret;
 	return 0;

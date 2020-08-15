@@ -9,6 +9,7 @@
 #include <linux/cpu.h>
 #include <linux/module.h>
 #include <linux/debugobjects.h>
+#include <linux/slab.h>
 
 #ifdef CONFIG_HOTPLUG_CPU
 static LIST_HEAD(percpu_counters);
@@ -60,30 +61,33 @@ static inline void debug_percpu_counter_deactivate(struct percpu_counter *fbc)
 void percpu_counter_set(struct percpu_counter *fbc, s64 amount)
 {
 	int cpu;
-	unsigned long flags;
+	struct percpu_counter_rw *pcrw = fbc->pcrw;
 
-	raw_spin_lock_irqsave(&fbc->lock, flags);
 	for_each_possible_cpu(cpu) {
 		s32 *pcount = per_cpu_ptr(fbc->counters, cpu);
 		*pcount = 0;
 	}
-	fbc->count = amount;
-	raw_spin_unlock_irqrestore(&fbc->lock, flags);
+	atomic64_set(&pcrw->count, amount);
+	atomic64_set(&pcrw->slowcount, 0);
 }
 EXPORT_SYMBOL(percpu_counter_set);
 
 void __percpu_counter_add(struct percpu_counter *fbc, s64 amount, s32 batch)
 {
 	s64 count;
+	struct percpu_counter_rw *pcrw = fbc->pcrw;
+
+	if (atomic_read(&fbc->sum_cnt)) {
+		atomic64_add(amount, &pcrw->slowcount);
+		return;
+	}
 
 	preempt_disable();
 	count = __this_cpu_read(*fbc->counters) + amount;
 	if (count >= batch || count <= -batch) {
-		unsigned long flags;
-		raw_spin_lock_irqsave(&fbc->lock, flags);
-		fbc->count += count;
+		atomic64_add(count, &pcrw->count);
+		pcrw->sequence++;
 		__this_cpu_sub(*fbc->counters, count - amount);
-		raw_spin_unlock_irqrestore(&fbc->lock, flags);
 	} else {
 		this_cpu_add(*fbc->counters, amount);
 	}
@@ -99,15 +103,26 @@ s64 __percpu_counter_sum(struct percpu_counter *fbc)
 {
 	s64 ret;
 	int cpu;
-	unsigned long flags;
+	unsigned int seq;
+	struct percpu_counter_rw *pcrw = fbc->pcrw;
 
-	raw_spin_lock_irqsave(&fbc->lock, flags);
-	ret = fbc->count;
-	for_each_online_cpu(cpu) {
-		s32 *pcount = per_cpu_ptr(fbc->counters, cpu);
-		ret += *pcount;
-	}
-	raw_spin_unlock_irqrestore(&fbc->lock, flags);
+	atomic_inc(&fbc->sum_cnt);
+	do {
+		seq = pcrw->sequence;
+		smp_rmb();
+
+		ret = atomic64_read(&pcrw->count);
+		for_each_online_cpu(cpu) {
+			s32 *pcount = per_cpu_ptr(fbc->counters, cpu);
+			ret += *pcount;
+		}
+
+		smp_rmb();
+	} while (pcrw->sequence != seq);
+
+	atomic_dec(&fbc->sum_cnt);
+	ret += atomic64_read(&pcrw->slowcount);
+
 	return ret;
 }
 EXPORT_SYMBOL(__percpu_counter_sum);
@@ -116,20 +131,29 @@ int __percpu_counter_init(struct percpu_counter *fbc, s64 amount, gfp_t gfp,
 			  struct lock_class_key *key)
 {
 	unsigned long flags __maybe_unused;
+	struct percpu_counter_rw *pcrw; 
 
-	raw_spin_lock_init(&fbc->lock);
-	lockdep_set_class(&fbc->lock, key);
-	fbc->count = amount;
-	fbc->counters = alloc_percpu_gfp(s32, gfp);
-	if (!fbc->counters)
+	pcrw = kzalloc(sizeof(*pcrw), GFP_KERNEL);
+	if (!pcrw)
 		return -ENOMEM;
+	atomic64_set(&pcrw->count, amount);
+
+	fbc->counters = alloc_percpu_gfp(s32, gfp);
+	if (!fbc->counters) {
+		kfree(pcrw);
+		return -ENOMEM;
+	}
+	
+	fbc->pcrw = pcrw;
+	atomic_set(&fbc->sum_cnt, 0);
 
 	debug_percpu_counter_activate(fbc);
-
+	
 #ifdef CONFIG_HOTPLUG_CPU
-	INIT_LIST_HEAD(&fbc->list);
+	INIT_LIST_HEAD(&pcrw->list);
+	pcrw->fbc = fbc;
 	spin_lock_irqsave(&percpu_counters_lock, flags);
-	list_add(&fbc->list, &percpu_counters);
+	list_add(&pcrw->list, &percpu_counters);
 	spin_unlock_irqrestore(&percpu_counters_lock, flags);
 #endif
 	return 0;
@@ -147,11 +171,13 @@ void percpu_counter_destroy(struct percpu_counter *fbc)
 
 #ifdef CONFIG_HOTPLUG_CPU
 	spin_lock_irqsave(&percpu_counters_lock, flags);
-	list_del(&fbc->list);
+	list_del(&fbc->pcrw->list);
 	spin_unlock_irqrestore(&percpu_counters_lock, flags);
 #endif
 	free_percpu(fbc->counters);
 	fbc->counters = NULL;
+	kfree(fbc->pcrw);
+	fbc->pcrw = NULL;
 }
 EXPORT_SYMBOL(percpu_counter_destroy);
 
@@ -170,7 +196,7 @@ static int percpu_counter_hotcpu_callback(struct notifier_block *nb,
 {
 #ifdef CONFIG_HOTPLUG_CPU
 	unsigned int cpu;
-	struct percpu_counter *fbc;
+	struct percpu_counter_rw *pcrw;
 
 	compute_batch_value();
 	if (action != CPU_DEAD && action != CPU_DEAD_FROZEN)
@@ -178,15 +204,13 @@ static int percpu_counter_hotcpu_callback(struct notifier_block *nb,
 
 	cpu = (unsigned long)hcpu;
 	spin_lock_irq(&percpu_counters_lock);
-	list_for_each_entry(fbc, &percpu_counters, list) {
+	list_for_each_entry(pcrw, &percpu_counters, list) {
 		s32 *pcount;
 		unsigned long flags;
 
-		raw_spin_lock_irqsave(&fbc->lock, flags);
-		pcount = per_cpu_ptr(fbc->counters, cpu);
-		fbc->count += *pcount;
+		pcount = per_cpu_ptr(pcrw->fbc->counters, cpu);
+		atomic64_add(*pcount, &pcrw->count);
 		*pcount = 0;
-		raw_spin_unlock_irqrestore(&fbc->lock, flags);
 	}
 	spin_unlock_irq(&percpu_counters_lock);
 #endif
