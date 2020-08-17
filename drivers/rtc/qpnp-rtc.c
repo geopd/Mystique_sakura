@@ -273,10 +273,6 @@ qpnp_rtc_read_time(struct device *dev, struct rtc_time *tm)
 		return rc;
 	}
 
-	dev_dbg(dev, "secs = %lu, h:m:s == %d:%d:%d, d/m/y = %d/%d/%d\n",
-			secs, tm->tm_hour, tm->tm_min, tm->tm_sec,
-			tm->tm_mday, tm->tm_mon, tm->tm_year);
-
 	return 0;
 }
 
@@ -335,10 +331,6 @@ qpnp_rtc_set_alarm(struct device *dev, struct rtc_wkalrm *alarm)
 
 	rtc_dd->alarm_ctrl_reg1 = ctrl_reg;
 
-	dev_dbg(dev, "Alarm Set for h:r:s=%d:%d:%d, d/m/y=%d/%d/%d\n",
-			alarm->time.tm_hour, alarm->time.tm_min,
-			alarm->time.tm_sec, alarm->time.tm_mday,
-			alarm->time.tm_mon, alarm->time.tm_year);
 rtc_rw_fail:
 	spin_unlock_irqrestore(&rtc_dd->alarm_ctrl_lock, irq_flags);
 	return rc;
@@ -382,7 +374,6 @@ qpnp_rtc_read_alarm(struct device *dev, struct rtc_wkalrm *alarm)
 	}
 
 	alarm->enabled = !!(value[0] & BIT_RTC_ALARM_ENABLE);
-
 	return 0;
 }
 
