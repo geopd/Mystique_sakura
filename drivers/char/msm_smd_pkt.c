@@ -325,7 +325,6 @@ static void packet_arrival_worker(struct work_struct *work)
 
 	smd_pkt_devp = container_of(work, struct smd_pkt_dev,
 				    packet_arrival_work);
-	mutex_lock(&smd_pkt_devp->ch_lock);
 	spin_lock_irqsave(&smd_pkt_devp->pa_spinlock, flags);
 	if (smd_pkt_devp->ch && smd_pkt_devp->ws_locked) {
 		D_READ("%s locking smd_pkt_dev id:%d wakeup source\n",
@@ -337,7 +336,6 @@ static void packet_arrival_worker(struct work_struct *work)
 		__pm_wakeup_event(&smd_pkt_devp->pa_ws, WAKEUPSOURCE_TIMEOUT);
 	}
 	spin_unlock_irqrestore(&smd_pkt_devp->pa_spinlock, flags);
-	mutex_unlock(&smd_pkt_devp->ch_lock);
 }
 
 static long smd_pkt_ioctl(struct file *file, unsigned int cmd,
@@ -351,7 +349,6 @@ static long smd_pkt_ioctl(struct file *file, unsigned int cmd,
 	if (!smd_pkt_devp)
 		return -EINVAL;
 
-	mutex_lock(&smd_pkt_devp->ch_lock);
 	switch (cmd) {
 	case TIOCMGET:
 		smd_pkt_devp->sigs_updated = false;
@@ -380,7 +377,6 @@ static long smd_pkt_ioctl(struct file *file, unsigned int cmd,
 			__func__, cmd);
 		ret = -ENOIOCTLCMD;
 	}
-	mutex_unlock(&smd_pkt_devp->ch_lock);
 
 	return ret;
 }
@@ -513,7 +509,6 @@ wait_for_packet:
 	} while (pkt_size != bytes_read);
 	mutex_unlock(&smd_pkt_devp->rx_lock);
 
-	mutex_lock(&smd_pkt_devp->ch_lock);
 	spin_lock_irqsave(&smd_pkt_devp->pa_spinlock, flags);
 	if (smd_pkt_devp->poll_mode &&
 	    !smd_cur_packet_size(smd_pkt_devp->ch)) {
@@ -524,7 +519,6 @@ wait_for_packet:
 			__func__, smd_pkt_devp->i);
 	}
 	spin_unlock_irqrestore(&smd_pkt_devp->pa_spinlock, flags);
-	mutex_unlock(&smd_pkt_devp->ch_lock);
 
 	r = copy_to_user(_buf, buf, bytes_read);
 	if (r) {
@@ -1087,8 +1081,6 @@ int smd_pkt_release(struct inode *inode, struct file *file)
 		 __func__, smd_pkt_devp->i);
 
 	mutex_lock(&smd_pkt_devp->ch_lock);
-	mutex_lock(&smd_pkt_devp->rx_lock);
-	mutex_lock(&smd_pkt_devp->tx_lock);
 	if (smd_pkt_devp->ref_cnt > 0)
 		smd_pkt_devp->ref_cnt--;
 
@@ -1111,8 +1103,6 @@ int smd_pkt_release(struct inode *inode, struct file *file)
 		spin_unlock_irqrestore(&smd_pkt_devp->pa_spinlock, flags);
 		smd_pkt_devp->sigs_updated = false;
 	}
-	mutex_unlock(&smd_pkt_devp->tx_lock);
-	mutex_unlock(&smd_pkt_devp->rx_lock);
 	mutex_unlock(&smd_pkt_devp->ch_lock);
 
 	if (flush_work(&smd_pkt_devp->packet_arrival_work))
