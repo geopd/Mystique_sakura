@@ -432,6 +432,8 @@ void tcp_init_sock(struct sock *sk)
 	local_bh_disable();
 	sk_sockets_allocated_inc(sk);
 	local_bh_enable();
+
+	sk->sk_route_forced_caps = NETIF_F_GSO;
 }
 EXPORT_SYMBOL(tcp_init_sock);
 
