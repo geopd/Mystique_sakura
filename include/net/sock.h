@@ -406,6 +406,7 @@ struct sock {
 	u32			sk_max_pacing_rate;
 	netdev_features_t	sk_route_caps;
 	netdev_features_t	sk_route_nocaps;
+	netdev_features_t	sk_route_forced_caps;
 	int			sk_gso_type;
 	unsigned int		sk_gso_max_size;
 	u16			sk_gso_max_segs;
