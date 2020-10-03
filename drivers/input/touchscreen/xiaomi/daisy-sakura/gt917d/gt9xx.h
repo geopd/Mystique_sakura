@@ -51,10 +51,12 @@
 #include <linux/usb.h>
 #include <linux/power_supply.h>
 
-#define CONFIG_TOUCHSCREEN_GT9XX_UPDATE
-#define CONFIG_TOUCHSCREEN_GT9XX_TOOL
+// #define GTP_PEN_MODE /* Uncomment this only if you want stylus support */
 
+#ifdef GTP_PEN_MODE
 #define GTP_TOOL_PEN	1
+#endif
+
 #define GTP_TOOL_FINGER 2
 
 #define MAX_KEY_NUMS 4
@@ -103,8 +105,12 @@ struct goodix_ts_platform_data {
 	u32 type_a_report;
 	u32 power_off_sleep;
 	u32 resume_in_workqueue;
+
+#ifdef GTP_PEN_MODE
 	u32 pen_suppress_finger;
-	u32 charger_cmd;/*gexiantao@20180403*/
+#endif
+	u32 charger_cmd;
+
 	struct goodix_config_data config;
 };
 
@@ -159,7 +165,11 @@ struct goodix_ts_data {
 #endif
 	struct i2c_client *client;
 	struct input_dev *input_dev;
+
+#ifdef GTP_PEN_MODE
 	struct input_dev *pen_dev;
+#endif
+
 	struct goodix_ts_platform_data *pdata;
 	/* use pinctrl control int-pin output low or high */
 	struct goodix_pinctrl pinctrl;
@@ -296,7 +306,11 @@ config your key info here */
 #define GTP_CONFIG_MIN_LENGTH	186
 #define GTP_ESD_CHECK_VALUE	0xAA
 #define RETRY_MAX_TIMES		5
+
+#ifdef GTP_PEN_MODE
 #define PEN_TRACK_ID		9
+#endif
+
 #define MASK_BIT_8		0x80
 #define FAIL			0
 #define SUCCESS			1
