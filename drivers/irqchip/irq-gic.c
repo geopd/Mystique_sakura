@@ -341,8 +341,8 @@ static int gic_set_affinity(struct irq_data *d, const struct cpumask *mask_val,
 	gic_lock_irqsave(flags);
 	mask = 0xff << shift;
 	bit = gic_cpu_map[cpu] << shift;
-	val = readl_relaxed_no_log(reg) & ~mask;
-	writel_relaxed_no_log(val | bit, reg);
+	val = readl_relaxed(reg) & ~mask;
+	writel_relaxed(val | bit, reg);
 	gic_unlock_irqrestore(flags);
 
 	return IRQ_SET_MASK_OK_DONE;
