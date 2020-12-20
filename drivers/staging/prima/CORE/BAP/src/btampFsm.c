@@ -100,6 +100,7 @@
 // I just need these one "opaque" type definition in order to use the "frames" code
 typedef struct sAniSirGlobal *tpAniSirGlobal;
 #include "dot11f.h"
+#include <disable.h>
 
 #if 0
 /*
