@@ -85,6 +85,7 @@
 #endif //WLAN_BTAMP_FEATURE
 #include "wlan_qct_wdi_cts.h"
 #include "wlan_qct_pal_sync.h"
+#include <disable.h>
 
 /*---------------------------------------------------------------------------
  * Preprocessor Definitions and Constants
@@ -3601,6 +3602,7 @@ rateidx_to_rate_bw_preamble_sgi   rateidx_to_rate_bw_preamble_sgi_table[] =
 { 4333, PREAMBLE_VHT, S_BW80, 1},
 };
 
+#if 0
 void get_rate_and_MCS(per_packet_stats *stats, uint32 rateindex)
 {
     rateidx_to_rate_bw_preamble_sgi *ratetbl;
@@ -3668,6 +3670,7 @@ void get_rate_and_MCS(per_packet_stats *stats, uint32 rateindex)
     stats->MCS.bw = ratetbl->bw;
     stats->MCS.short_gi = ratetbl->short_gi;
 }
+#endif
 
 v_U16_t vos_get_rate_from_rateidx(uint32 rateindex)
 {

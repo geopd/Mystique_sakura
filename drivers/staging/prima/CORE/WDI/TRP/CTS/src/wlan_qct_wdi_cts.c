@@ -94,6 +94,7 @@
 #include "msm_smd.h"
 #endif
 #include "vos_api.h"
+#include <disable.h>
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 14, 0))
 #include <linux/wcnss_wlan.h>
