@@ -104,11 +104,7 @@ struct a5xx_cp_smmu_info {
 	uint32_t  context_idr;
 };
 
-void a5xx_snapshot(struct adreno_device *adreno_dev,
-		struct kgsl_snapshot *snapshot);
 unsigned int a5xx_num_registers(void);
-
-void a5xx_crashdump_init(struct adreno_device *adreno_dev);
 
 void a5xx_hwcg_set(struct adreno_device *adreno_dev, bool on);
 
