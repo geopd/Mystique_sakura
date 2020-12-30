@@ -326,8 +326,6 @@ static void a5xx_init(struct adreno_device *adreno_dev)
 		if (ret)
 			a5xx_critical_packet_destroy(adreno_dev);
 	}
-
-	a5xx_crashdump_init(adreno_dev);
 }
 
 static void a5xx_remove(struct adreno_device *adreno_dev)
@@ -3439,6 +3437,7 @@ static struct adreno_snapshot_data a5xx_snapshot_data = {
 	.sect_sizes = &a5xx_snap_sizes,
 };
 
+#if 0
 static struct adreno_coresight_register a5xx_coresight_registers[] = {
 	{ A5XX_RBBM_CFG_DBGBUS_SEL_A },
 	{ A5XX_RBBM_CFG_DBGBUS_SEL_B },
@@ -3626,23 +3625,22 @@ static const struct attribute_group *a5xx_coresight_groups[] = {
 	NULL,
 };
 
+
 static struct adreno_coresight a5xx_coresight = {
 	.registers = a5xx_coresight_registers,
 	.count = ARRAY_SIZE(a5xx_coresight_registers),
 	.groups = a5xx_coresight_groups,
 };
+#endif
 
 struct adreno_gpudev adreno_a5xx_gpudev = {
 	.reg_offsets = &a5xx_reg_offsets,
 	.int_bits = a5xx_int_bits,
 	.ft_perf_counters = a5xx_ft_perf_counters,
 	.ft_perf_counters_count = ARRAY_SIZE(a5xx_ft_perf_counters),
-	.coresight = {&a5xx_coresight},
 	.start = a5xx_start,
-	.snapshot = a5xx_snapshot,
 	.irq = &a5xx_irq,
 	.snapshot_data = &a5xx_snapshot_data,
-	.irq_trace = trace_kgsl_a5xx_irq_status,
 	.num_prio_levels = KGSL_PRIORITY_MAX_RB_LEVELS,
 	.platform_setup = a5xx_platform_setup,
 	.init = a5xx_init,
