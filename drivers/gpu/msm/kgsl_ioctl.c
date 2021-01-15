@@ -15,6 +15,7 @@
 #include <linux/compat.h>
 #include <linux/uaccess.h>
 #include <linux/fs.h>
+#include <linux/input/mt.h>
 #include "kgsl_device.h"
 #include "kgsl_sync.h"
 #include "adreno.h"
@@ -173,6 +174,7 @@ long kgsl_ioctl(struct file *filep, unsigned int cmd, unsigned long arg)
 	long ret;
 
 	if (cmd == IOCTL_KGSL_GPU_COMMAND &&
+	       read_ev_state() &&
 	    READ_ONCE(device->state) != KGSL_STATE_ACTIVE)
 		kgsl_schedule_work(&adreno_dev->pwr_on_work);
 
