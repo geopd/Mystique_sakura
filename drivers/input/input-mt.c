@@ -14,6 +14,8 @@
 
 #define TRKID_SGN	((TRKID_MAX + 1) >> 1)
 
+atomic_t input_state;
+
 static void copy_abs(struct input_dev *dev, unsigned int dst, unsigned int src)
 {
 	if (dev->absinfo && test_bit(src, dev->absbit)) {
@@ -147,12 +149,15 @@ void input_mt_report_slot_state(struct input_dev *dev,
 
 	if (!active) {
 		input_event(dev, EV_ABS, ABS_MT_TRACKING_ID, -1);
+		write_ev_state(0);
 		return;
 	}
 
 	id = input_mt_get_value(slot, ABS_MT_TRACKING_ID);
 	if (id < 0 || input_mt_get_value(slot, ABS_MT_TOOL_TYPE) != tool_type)
 		id = input_mt_new_trkid(mt);
+
+	write_ev_state(1);
 
 	input_event(dev, EV_ABS, ABS_MT_TRACKING_ID, id);
 	input_event(dev, EV_ABS, ABS_MT_TOOL_TYPE, tool_type);
