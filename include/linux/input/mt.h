@@ -124,4 +124,9 @@ int input_mt_assign_slots(struct input_dev *dev, int *slots,
 
 int input_mt_get_slot_by_key(struct input_dev *dev, int key);
 
+extern atomic_t input_state;
+
+#define read_ev_state() atomic_read(&input_state)
+#define write_ev_state(update) (!atomic_cmpxchg(&input_state, !update, update) != update)
+
 #endif
