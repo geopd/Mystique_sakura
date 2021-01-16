@@ -138,6 +138,12 @@ struct interrupt_stat interrupt_stats[NUM_SMD_SUBSYSTEMS];
 int msm_smd_debug_mask = MSM_SMD_POWER_INFO | MSM_SMD_INFO |
 							MSM_SMSM_POWER_INFO;
 module_param_named(debug_mask, msm_smd_debug_mask, int, 0664);
+
+#if defined(CONFIG_SMD_Q6_BLOCK_CHAN) && defined(CONFIG_SMD_Q6_BLOCK_CHAN_ID)
+int msm_smd_block_app = 0;
+module_param_named(msm_smd_block, msm_smd_block_app, int, 0664);
+#endif
+
 void *smd_log_ctx;
 void *smsm_log_ctx;
 #define NUM_LOG_PAGES 4
@@ -1346,6 +1352,13 @@ static void handle_smd_irq(struct remote_proc_info *r_info,
 	list_for_each_entry(ch, list, ch_list) {
 		state_change = 0;
 		ch_flags = 0;
+
+#if defined(CONFIG_SMD_Q6_BLOCK_CHAN) && defined(CONFIG_SMD_Q6_BLOCK_CHAN_ID)
+		if (msm_smd_block_app &&
+			ch->n == CONFIG_SMD_Q6_BLOCK_CHAN_ID)
+			continue;
+#endif
+
 		if (ch_is_open(ch)) {
 			if (ch->half_ch->get_fHEAD(ch->recv)) {
 				ch->half_ch->set_fHEAD(ch->recv, 0);
