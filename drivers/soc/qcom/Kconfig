@@ -450,6 +450,23 @@ config MSM_SMD_DEBUG
 	  what channels caused interrupt activity, and when internal state
 	  change events occur.
 
+config SMD_Q6_BLOCK_CHAN
+	tristate "Block all sensors associated with a SMD channel id"
+	depends on MSM_SMD
+	default n
+	help
+	  This enables support for blocking a SMD channel, whose channel ID 
+	  you can define in CONFIG_SMD_Q6_BLOCK_CHAN_ID.
+	  This will create a sysfs node which will allow you to toggle sensor
+	  functionality.Always toggle this node after userspace has completely
+	  booted, otherwise problems may occur.
+
+	  If unsure, say N.
+
+config SMD_Q6_BLOCK_CHAN_ID
+	depends on SMD_Q6_BLOCK_CHAN
+	int "Specify a SMD channel ID to block"
+
 config MSM_GLINK
 	bool "Generic Link (G-Link)"
 	help
