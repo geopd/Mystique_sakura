@@ -30,7 +30,6 @@ extern unsigned int sysctl_sched_init_task_load_pct;
 extern unsigned int sysctl_sched_cpu_high_irqload;
 extern unsigned int sysctl_sched_use_walt_cpu_util;
 extern unsigned int sysctl_sched_use_walt_task_util;
-extern unsigned int sysctl_sched_boost;
 extern unsigned int sysctl_sched_group_upmigrate_pct;
 extern unsigned int sysctl_sched_group_downmigrate_pct;
 extern unsigned int sysctl_sched_walt_rotate_big_tasks;
@@ -42,6 +41,9 @@ walt_proc_update_handler(struct ctl_table *table, int write,
 			 void __user *buffer, size_t *lenp,
 			 loff_t *ppos);
 
+static inline unsigned int sysctl_sched_boost(struct ctl_table *table, int write,
+                         		void __user *buffer, size_t *lenp,
+                         		loff_t *ppos) { return 0; }
 #endif /* CONFIG_SCHED_WALT */
 
 #if defined(CONFIG_PREEMPT_TRACER) || defined(CONFIG_IRQSOFF_TRACER)
@@ -76,8 +78,8 @@ int sched_proc_update_handler(struct ctl_table *table, int write,
 extern int sched_migrate_notify_proc_handler(struct ctl_table *table,
 		int write, void __user *buffer, size_t *lenp, loff_t *ppos);
 
-extern int sched_boost_handler(struct ctl_table *table, int write,
-			void __user *buffer, size_t *lenp, loff_t *ppos);
+static inline int sched_boost_handler(struct ctl_table *table, int write,
+			void __user *buffer, size_t *lenp, loff_t *ppos) { return 0; }
 
 extern int sched_window_update_handler(struct ctl_table *table,
 		 int write, void __user *buffer, size_t *lenp, loff_t *ppos);
