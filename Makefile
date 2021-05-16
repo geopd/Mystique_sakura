@@ -407,9 +407,9 @@ REGR_FIXFLAGS   =  --param=max-inline-insns-auto=1000 \
 KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -fno-strict-aliasing -fno-common -fshort-wchar \
 		   -Werror-implicit-function-declaration \
-		   -Wno-format-security -ffast-math -march=armv8-a+crc+crypto -mtune=cortex-a53 -mcpu=cortex-a53+crc+crypto  \
+		   -Wno-format-security -ffast-math -mtune=cortex-a53 -mcpu=cortex-a53+crc+crypto  \
 		   -std=gnu89 -O3 $(REGR_FIXFLAGS) #$(LTO_CFLAGS)
-KBUILD_CPPFLAGS := -D__KERNEL__ -O3 -march=armv8-a+crc+crypto -mtune=cortex-a53 -mcpu=cortex-a53+crc+crypto 
+KBUILD_CPPFLAGS := -D__KERNEL__ -O3 -mtune=cortex-a53 -mcpu=cortex-a53+crc+crypto
 KBUILD_AFLAGS_KERNEL :=
 KBUILD_CFLAGS_KERNEL :=
 KBUILD_AFLAGS   := -D__ASSEMBLY__ -O3
@@ -417,6 +417,11 @@ KBUILD_AFLAGS_MODULE  := -DMODULE
 KBUILD_CFLAGS_MODULE  := -DMODULE -fno-pic -O3 -mtune=cortex-a53 -mcpu=cortex-a53+crc+crypto 
 KBUILD_LDFLAGS_MODULE := -T $(srctree)/scripts/module-common.lds
 GCC_PLUGINS_CFLAGS :=
+
+ifeq ($(cc-name),gcc)
+KBUILD_CFLAGS   += -march=armv8-a+crc+crypto
+KBUILD_CPPFLAGS += -march=armv8-a+crc+crypto
+endif
 
 # Read KERNELRELEASE from include/config/kernel.release (if it exists)
 KERNELRELEASE = $(shell cat include/config/kernel.release 2> /dev/null)
