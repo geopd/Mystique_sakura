@@ -916,25 +916,17 @@
 		qcom,speed7-bin-v0-cl =
 			<          0 0>,
 			<  652800000 1>,
-			< 1036800000 2>,
-			< 1401600000 3>,
-			< 1689600000 4>,
-			< 1804800000 5>,
-			< 1958400000 6>,
-			< 2016000000 7>,
-			< 2150400000 8>,
-			< 2208000000 9>;
+			< 1401600000 2>,
+			< 1689600000 3>,
+			< 1958400000 4>,
+			< 2208000000 5>;
 		qcom,speed7-bin-v0-cci =
 			<          0 0>,
 			<  261120000 1>,
-			<  414720000 2>,
-			<  560640000 3>,
-			<  675840000 4>,
-			<  721920000 5>,
-			<  783360000 6>,
-			<  806400000 7>,
-			<  860160000 8>,
-			<  883200000 9>;
+			<  560640000 2>,
+			<  675840000 3>,
+			<  783360000 4>,
+			<  883200000 5>;
 		qcom,speed6-bin-v0-cl =
 			<          0 0>,
 			<  652800000 1>,
@@ -955,13 +947,8 @@
 	msm_cpufreq: qcom,msm-cpufreq {
 		compatible = "qcom,msm-cpufreq";
 		clock-names = "l2_clk", "cpu0_clk", "cpu1_clk", "cpu2_clk",
-				"cpu3_clk", "cpu4_clk", "cpu5_clk",
-				"cpu6_clk", "cpu7_clk";
+				"cpu3_clk";
 		clocks = <&clock_cpu clk_cci_clk>,
-			 <&clock_cpu clk_a53_pwr_clk>,
-			 <&clock_cpu clk_a53_pwr_clk>,
-			 <&clock_cpu clk_a53_pwr_clk>,
-			 <&clock_cpu clk_a53_pwr_clk>,
 			 <&clock_cpu clk_a53_pwr_clk>,
 			 <&clock_cpu clk_a53_pwr_clk>,
 			 <&clock_cpu clk_a53_pwr_clk>,
@@ -969,13 +956,9 @@
 
 		qcom,cpufreq-table =
 			 <  652800 >,
-			 < 1036800 >,
 			 < 1401600 >,
 			 < 1689600 >,
-			 < 1804800 >,
 			 < 1958400 >,
-			 < 2016000 >,
-			 < 2150400 >,
 			 < 2208000 >;
 	};
 
