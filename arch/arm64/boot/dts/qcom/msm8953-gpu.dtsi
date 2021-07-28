@@ -127,6 +127,9 @@
 		/* Enable context aware freq. scaling */
 		qcom,enable-ca-jump;
 
+		/* To disable GPU wake up on touch event */
+		qcom,disable-wake-on-touch;
+
 		/* Context aware jump busy penalty in us */
 		qcom,ca-busy-penalty = <12000>;
 
