@@ -111,7 +111,11 @@ modpost_link()
 		info LD vmlinux.o
 	fi
 
+	if [ -n "${CONFIG_LTO}" ]; then
 	${LDFINAL} ${LDFLAGS} -r -o ${1} $(lto_lds) ${objects}
+	else
+	${LD} ${LDFLAGS} -r -o ${1} $(lto_lds) ${objects}
+	fi
 }
 
 # If CONFIG_LTO_CLANG is selected, we postpone running recordmcount until
@@ -136,7 +140,12 @@ vmlinux_link()
 	local objects
 
 	if [ "${SRCARCH}" != "um" ]; then
-		local ld=${LDFINAL}
+		if [ -n "${CONFIG_LTO}" ]; then
+			local ld=${LDFINAL}
+		else
+			local ld=${LD}
+		fi
+
 		local ldflags="${LDFLAGS} ${LDFLAGS_vmlinux}"
 
 		if [ -n "${LDFINAL_vmlinux}" ]; then
@@ -392,7 +401,12 @@ if [ ! -z ${RTIC_MP_O} ]; then
 	fi
 fi
 
-info LDFINAL vmlinux
+if [ -n "${CONFIG_LTO}" ]; then
+	info LDFINAL vmlinux
+else
+	info LD vmlinux
+fi
+
 vmlinux_link "${kallsymso}" vmlinux
 
 if [ -n "${CONFIG_BUILDTIME_EXTABLE_SORT}" ]; then
