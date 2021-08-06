@@ -410,14 +410,14 @@ REGR_FIXFLAGS   =  --param=max-inline-insns-auto=1000 \
 KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -fno-strict-aliasing -fno-common -fshort-wchar \
 		   -Werror-implicit-function-declaration \
-		   -Wno-format-security -ffast-math -mtune=cortex-a53 -mcpu=cortex-a53+crc+crypto  \
+		   -Wno-format-security -ffast-math -mtune=cortex-a53 \
 		   -std=gnu89 -O3 $(REGR_FIXFLAGS) #$(LTO_CFLAGS)
-KBUILD_CPPFLAGS := -D__KERNEL__ -O3 -mtune=cortex-a53 -mcpu=cortex-a53+crc+crypto
+KBUILD_CPPFLAGS := -D__KERNEL__ -O3 -mtune=cortex-a53
 KBUILD_AFLAGS_KERNEL :=
 KBUILD_CFLAGS_KERNEL :=
 KBUILD_AFLAGS   := -D__ASSEMBLY__ -O3
 KBUILD_AFLAGS_MODULE  := -DMODULE
-KBUILD_CFLAGS_MODULE  := -DMODULE -fno-pic -O3 -mtune=cortex-a53 -mcpu=cortex-a53+crc+crypto 
+KBUILD_CFLAGS_MODULE  := -DMODULE -fno-pic -O3 -mtune=cortex-a53
 KBUILD_LDFLAGS_MODULE := -T $(srctree)/scripts/module-common.lds
 LDFLAGS :=
 GCC_PLUGINS_CFLAGS :=
