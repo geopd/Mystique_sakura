@@ -41,8 +41,6 @@
 #include <linux/earlysuspend.h>
 #define FTS_SUSPEND_LEVEL 1	 /* Early-suspend level */
 #endif
-/*Add by HQ-zmc [Date: 2018-01-24 09:12:34]*/
-#include "./focaltech_test/focaltech_test.h"
 
 /*****************************************************************************
 * Private constant and macro definitions using #define
@@ -1486,15 +1484,6 @@ static int fts_ts_probe(struct i2c_client *client, const struct i2c_device_id *i
 	ts_data->early_suspend.resume = fts_ts_late_resume;
 	register_early_suspend(&ts_data->early_suspend);
 #endif
-
-	ret = fts_tp_data_dump_proc();
-	if (ret) {
-		FTS_ERROR("Unable to create tp_data_dump proc: %d", ret);
-	}
-	ret = fts_tp_selftest_proc();
-	if (ret) {
-		FTS_ERROR("Unable to create tp_selftest_proc proc: %d", ret);
-	}
 
 	fts_5446_enable_charger_mode = 1;
 	FTS_FUNC_EXIT();
