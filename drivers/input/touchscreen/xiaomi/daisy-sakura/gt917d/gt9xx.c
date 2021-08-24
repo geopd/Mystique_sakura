@@ -51,8 +51,6 @@ static struct proc_dir_entry *gtp_locdown_proc;
 static struct proc_dir_entry *gtp_wakeup_gesture_proc;
 static char tp_info_summary[80] = "";
 static char tp_lockdown_info[128];
-extern void gtp_test_sysfs_init(void);
-extern void gtp_test_sysfs_deinit(void);
 
 #if ((defined CONFIG_PM) && (defined CONFIG_ENABLE_PM_TP_SUSPEND_RESUME))
 extern bool lcm_ffbm_mode;
@@ -2440,8 +2438,6 @@ static int gtp_probe(struct i2c_client *client, const struct i2c_device_id *id)
 
 	gtp_create_wakeup_gesture_proc(client, ts);
 
-	gtp_test_sysfs_init();
-
 
 	return 0;
 
@@ -2477,7 +2473,6 @@ static int gtp_drv_remove(struct i2c_client *client)
 	struct goodix_ts_data *ts = i2c_get_clientdata(client);
 
 
-	gtp_test_sysfs_deinit();
 	gtp_work_control_enable(ts, false);
 	gtp_unregister_powermanager(ts);
 
