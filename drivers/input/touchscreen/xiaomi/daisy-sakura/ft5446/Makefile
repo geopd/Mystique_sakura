@@ -13,5 +13,4 @@ obj-$(CONFIG_TOUCHSCREEN_FT5446)	+=  focaltech_esdcheck.o
 obj-$(CONFIG_TOUCHSCREEN_FT5446)   +=  focaltech_i2c.o
 obj-$(CONFIG_TOUCHSCREEN_FT5446)   +=  focaltech_point_report_check.o
 obj-$(CONFIG_TOUCHSCREEN_FT5446)   +=  focaltech_flash/
-obj-$(CONFIG_TOUCHSCREEN_FT5446)   +=  focaltech_test/
 
