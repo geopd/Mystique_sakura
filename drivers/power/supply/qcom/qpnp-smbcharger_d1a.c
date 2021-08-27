@@ -2904,21 +2904,12 @@ static int set_usb_current_limit_vote_cb(struct votable *votable,
 	return 0;
 }
 
-#define		PCBA_V1_IN		35
-#define		PCBA_V2_IN		38
-#define		PCBA_V2_CN		36
 static int smbchg_system_temp_level_set(struct smbchg_chip *chip,
 								int lvl_sel)
 {
 	int rc = 0;
 	int prev_therm_lvl;
 	int thermal_icl_ma;
-
-	unsigned int	India_thermal_mitigation[7] = {2500, 2500, 1900, 1900, 1000, 1000, 0};
-
-	int *pcba_config = NULL;
-	pcba_config = (int *)smem_find(SMEM_ID_VENDOR1, sizeof(int), 0, SMEM_ANY_HOST_FLAG);
-	pr_err("pcba config check=%d.\n", *(pcba_config));
 
 	if (!chip->thermal_mitigation) {
 		dev_err(chip->dev, "Thermal mitigation not supported\n");
@@ -2973,16 +2964,8 @@ static int smbchg_system_temp_level_set(struct smbchg_chip *chip,
 			pr_err("Couldn't disable DC thermal ICL vote rc=%d\n",
 				rc);
 	} else {
-		if (*(pcba_config) == PCBA_V1_IN
-				|| *(pcba_config) == PCBA_V2_IN) {
-			thermal_icl_ma =
-				(int)India_thermal_mitigation[chip->therm_lvl_sel];
-			pr_err("Thermal_India.\n");
-		} else {
-			thermal_icl_ma =
-				(int)chip->thermal_mitigation[chip->therm_lvl_sel];
-			pr_err("Thermal_CN&Global.\n");
-		}
+		thermal_icl_ma =
+			(int)chip->thermal_mitigation[chip->therm_lvl_sel];
 		rc = vote(chip->usb_icl_votable, THERMAL_ICL_VOTER, true,
 					thermal_icl_ma);
 		if (rc < 0)
