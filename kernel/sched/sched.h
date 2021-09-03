@@ -863,8 +863,6 @@ struct rq {
 	u64 age_stamp;
 	u64 idle_stamp;
 	u64 avg_idle;
-	
-	struct sched_avg avg_thermal;
 
 	/* This is used to determine avg_idle's max value */
 	u64 max_idle_balance_cost;
@@ -1923,16 +1921,6 @@ unsigned long arch_scale_freq_capacity(struct sched_domain *sd, int cpu)
 	return SCHED_CAPACITY_SCALE;
 }
 #endif
-
-
-#ifndef arch_scale_thermal_pressure
-static __always_inline
-unsigned long arch_scale_thermal_pressure(int cpu)
-{
-	return 0;
-}
-#endif
-
 
 #ifndef arch_scale_max_freq_capacity
 static __always_inline
@@ -3001,7 +2989,6 @@ static inline void walt_fixup_cum_window_demand(struct rq *rq, s64 delta)
 extern void update_cpu_cluster_capacity(const cpumask_t *cpus);
 
 extern unsigned long thermal_cap(int cpu);
-extern int update_thermal_load_avg(u64 now, struct rq *rq, u64 capacity);
 
 extern void clear_walt_request(int cpu);
 
