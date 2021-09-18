@@ -808,8 +808,13 @@ DISABLE_LTO	+= $(DISABLE_CFI)
 export CFI_CFLAGS DISABLE_CFI
 endif
 
-KBUILD_CFLAGS   += -march=armv8-a+crc+crypto -mtune=cortex-a53
-KBUILD_AFLAGS   += -march=armv8-a+crc+crypto -mtune=cortex-a53
+ifeq ($(cc-name),gcc)
+  KBUILD_CFLAGS   += -march=armv8-a+crc+crypto -mtune=cortex-a53
+  KBUILD_AFLAGS   += -march=armv8-a+crc+crypto -mtune=cortex-a53
+else ifeq ($(cc-name),clang)
+  KBUILD_CFLAGS   += -mcpu=cortex-a53+crypto+crc
+  KBUILD_AFLAGS   += -mcpu=cortex-a53+crypto+crc
+endif
 
 ifdef CONFIG_CC_OPTIMIZE_FOR_SIZE
 KBUILD_CFLAGS   += -Os
