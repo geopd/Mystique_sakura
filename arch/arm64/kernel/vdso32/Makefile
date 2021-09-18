@@ -92,8 +92,13 @@ endif
 VDSO_AFLAGS := $(VDSO_CAFLAGS)
 VDSO_AFLAGS += -D__ASSEMBLY__
 
-VDSO_CFLAGS += -march=armv8-a+crc+crypto -mtune=cortex-a53
-VDSO_AFLAGS += -march=armv8-a+crc+crypto -mtune=cortex-a53
+ifeq ($(cc-name),gcc)
+  VDSO_CFLAGS += -march=armv8-a+crc+crypto -mtune=cortex-a53
+  VDSO_AFLAGS += -march=armv8-a+crc+crypto -mtune=cortex-a53
+else ifeq ($(cc-name),clang)
+  VDSO_CFLAGS += -mcpu=cortex-a53+crypto+crc
+  VDSO_AFLAGS += -mcpu=cortex-a53+crypto+crc
+endif
 
 VDSO_LDFLAGS := $(VDSO_CPPFLAGS)
 # From arm vDSO Makefile
