@@ -1759,6 +1759,7 @@ static struct i2c_driver fts_ts_driver = {
 		.name = FTS_DRIVER_NAME,
 		.owner = THIS_MODULE,
 		.of_match_table = fts_match_table,
+		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
 		#if ((defined CONFIG_PM) && (defined CONFIG_ENABLE_PM_TP_SUSPEND_RESUME))
 		.pm = &ft5446_dev_pm_ops,
 		#endif
