@@ -3024,6 +3024,7 @@ static struct i2c_driver goodix_ts_driver = {
 #ifdef CONFIG_OF
 		.of_match_table = gtp_match_table,
 #endif
+		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
 #if ((defined CONFIG_PM) && (defined CONFIG_ENABLE_PM_TP_SUSPEND_RESUME))
 		.pm		  = &gtp_pm_ops,
 #endif
