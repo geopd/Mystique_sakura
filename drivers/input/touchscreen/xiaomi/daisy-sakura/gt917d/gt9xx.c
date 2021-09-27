@@ -235,7 +235,7 @@ int gtp_i2c_write(struct i2c_client *client, u8 *buf, int len)
 		/* code optimize,use stack memory*/
 		msg.buf = &put_buf[0];
 	} else {
-		msg.buf = kmalloc(len > I2C_MAX_TRANSFER_SIZE
+		msg.buf = kzalloc(len > I2C_MAX_TRANSFER_SIZE
 				  ? I2C_MAX_TRANSFER_SIZE : len, GFP_KERNEL);
 		if (!msg.buf)
 			return -ENOMEM;
@@ -1650,7 +1650,7 @@ int gtp_read_Color(struct i2c_client *client, struct goodix_ts_data *ts)
 	buf[0] = GTP_REG_COLOR_GT917 >> 8;
 	buf[1] = GTP_REG_COLOR_GT917 & 0xff;
 
-	page = kmalloc(PAGE_SIZE, GFP_KERNEL);
+	page = kzalloc(PAGE_SIZE, GFP_KERNEL);
 	if (!page) {
 		kfree(page);
 		return -ENOMEM;
