@@ -2061,7 +2061,7 @@ static void uclamp_set(struct kernfs_open_file *of,
 
 	/* Set systemwide uclamps */
 	sysctl_sched_uclamp_util_min = 128;
-	sysctl_sched_uclamp_util_min_rt_default = 500;
+	sysctl_sched_uclamp_util_min_rt_default = 96;
 }
 #endif
 
