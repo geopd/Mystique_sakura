@@ -118,7 +118,7 @@ static void _a5xx_preemption_fault(struct adreno_device *adreno_dev)
 	if (kgsl_state_is_awake(device)) {
 		adreno_readreg(adreno_dev, ADRENO_REG_CP_PREEMPT, &status);
 
-		if (status == 0) {
+		if (!(status & 0x1)) {
 			adreno_set_preempt_state(adreno_dev,
 				ADRENO_PREEMPT_COMPLETE);
 
@@ -128,7 +128,7 @@ static void _a5xx_preemption_fault(struct adreno_device *adreno_dev)
 	}
 
 	KGSL_DRV_ERR(device,
-		"Preemption timed out: cur=%d R/W=%X/%X, next=%d R/W=%X/%X\n",
+		"Preemption Fault: cur=%d R/W=0x%x/0x%x, next=%d R/W=0x%x/0x%x\n",
 		adreno_dev->cur_rb->id,
 		adreno_get_rptr(adreno_dev->cur_rb), adreno_dev->cur_rb->wptr,
 		adreno_dev->next_rb->id,
